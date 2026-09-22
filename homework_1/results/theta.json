@@ -1,0 +1,19 @@
+{
+  "latency": {
+    "F_eff": 7064842968636.503,
+    "BW_eff": 91614649368.89088,
+    "c": 0.0005258732833058006
+  },
+  "energy": {
+    "e_flop": 2.9023134200598058e-11,
+    "e_byte": 0.0,
+    "E0": 0.0
+  },
+  "model": {
+    "latency": "T = sum_i max(F_i/F_eff, Q_i/BW_eff) + c  (per-op roofline)",
+    "energy": "E = e_flop*FLOPs + e_byte*Bytes + E0"
+  },
+  "gpu": "Tesla T4",
+  "idle_power_w": 27.852,
+  "notes": "fitted on base-grid non-OOM points only; random grid points are validation"
+}

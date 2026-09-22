@@ -62,7 +62,7 @@ def fit_energy(df_train):
                   np.ones_like(S, dtype=float)], axis=1)
     try:
         coef, _ = nnls(X, E)
-    except Exception:q
+    except Exception:
         coef, *_ = np.linalg.lstsq(X, E, rcond=None)
     return {"e_flop": float(coef[0]), "e_byte": float(coef[1]), "E0": float(coef[2])}
 

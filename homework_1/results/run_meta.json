@@ -1,0 +1,20 @@
+{
+  "gpu_name": "Tesla T4",
+  "gpu_total_bytes": 15637086208,
+  "idle_power_w": 27.852,
+  "torch": "2.11.0+cu128",
+  "seed": 0,
+  "rand_sizes": [
+    80,
+    208,
+    304,
+    320
+  ],
+  "rand_batches": [
+    111,
+    133,
+    139
+  ],
+  "cudnn_benchmark": false,
+  "allow_tf32": false
+}
