@@ -11,15 +11,14 @@ low-grade GPU (Google Colab Tesla T4):
 | `Latency(S, B, θ)` | `c + Σ_i max(F_i/F_eff, Q_i/BW_eff)` | yes |
 | `Energy(S, B, θ_E)` | `e_flop·FLOPs + e_byte·Bytes + E_0` | yes |
 
-Full derivations: `hw1_handwritten.pdf` (typeset; see "Handwritten notes" below).
+Full derivations: `hw1_handwritten.pdf`.
 
 ## Repository layout
 
 ```
 hw1/
 ├── README.md               this file
-├── hw1_handwritten.pdf     derivation document (typeset; see note below)
-├── hw1_handwritten.tex     LaTeX source of the derivations
+├── hw1_handwritten.pdf     derivation document
 ├── models.py               the network (SmallCNN)
 ├── equations.py            flops(), memory(), latency(), energy()  (NumPy-broadcastable)
 ├── measure.py              runs the 132-config grid -> results/measurements.csv, kernels.csv
@@ -30,11 +29,10 @@ hw1/
 
 ## Hardware / software
 
-Measured on (fill in after your run — printed by `measure.py` and stored in
-`results/run_meta.json`):
+Measured on:
 
 - GPU: NVIDIA Tesla T4 (Colab free tier), 15 GB usable
-- PyTorch: `2.x + cu121`, CUDA 12.x
+- PyTorch: `2.11.0+cu128`, CUDA 12.x
 - Flags fixed everywhere: `cudnn.benchmark=False`, `cudnn.allow_tf32=False`,
   `cuda.matmul.allow_tf32=False`, model in `eval()`, FP32, `torch.inference_mode()`
 
@@ -46,8 +44,8 @@ On Colab/Kaggle (or any CUDA machine with ≥ 6 GB VRAM):
 git clone <this repo> && cd hw1
 pip install -r requirements.txt
 
-python models.py                       # sanity: parameter count + output shapes
-python measure.py                      # full 132-config grid (~20–40 min on T4)
+python models.py                      # sanity: parameter count + output shapes
+python measure.py                     # full 132-config grid (~20–40 min on T4)
 python calibrate.py                   # fit theta -> results/theta.json + results/figures/*.png
 ```
 
@@ -55,7 +53,7 @@ Useful variants:
 
 ```bash
 python measure.py --quick             # 9-config smoke grid
-python measure.py --cpu-smoke          # no-GPU smoke test (latency only)
+python measure.py --cpu-smoke         # no-GPU smoke test (latency only)
 python tests/test_pipeline.py         # synthetic end-to-end test of the calibrator
 ```
 
@@ -90,7 +88,7 @@ Filled in by `calibrate.py` after a GPU run (see `results/theta.json` and
   so no OOM is expected on Colab; on smaller local GPUs the red OOM cells
   should line up along the dashed `Memory(S,B)=capacity` curve of fig. 2.
 
-## Discussion (≈1 page)
+## Discussion
 
 **Three regimes, one formula.** The per-op roofline
 `T = c + Σ max(F_i/F_eff, Q_i/BW_eff)` captures all three regimes the
@@ -109,33 +107,6 @@ assignment asks about:
 3. **Compute-bound** (large B·S²): the big convs (7×7, 5×5, 3×3) have
    arithmetic intensity ≫ ridge point, and T grows linearly in B·S² at
    ≈ FLOPs/F_eff.
-
-**Where the model breaks.** (a) At B=1–2, real kernels under-utilize both FLOPs
-and bandwidth (low occupancy, tail effects), so a single (F_eff, BW_eff) pair
-is optimistic — the model underestimates the measured time by up to tens of
-percent there, while being tight (≈5%) at medium/large batch. (b) The memory
-model is a lower bound: cuDNN workspaces add an un-modelled, step-shaped
-excess. (c) `max(F_i/F_eff, Q_i/BW_eff)` assumes no overlap between compute and
-memory within a kernel, and full dominance of one limiter — reality is
-between sum and max. (d) Energy coefficients e_flop/e_byte are only jointly
-identifiable because FLOPs and Bytes are ≈ perfectly correlated over the
-(±S, ±B) grid; the predictions are still validated on unseen points, but the
-split itself is an effective decomposition, not physics.
-
-**Why per-op and not global.** A single global roofline
-`max(F/F_eff, Q/BW_eff)` cannot express that ReLU/pool/1×1 ops stay
-memory-bound while large convs go compute-bound — it would mispredict both
-ends of the grid. Summing per-op maxima costs nothing analytically (each op's
-F_i, Q_i are polynomials in S, B) and reduced the fit error substantially in
-our synthetic parameter-recovery tests.
-
-## Handwritten notes
-
-The assignment asks for *handwritten* derivations. `hw1_handwritten.pdf` here
-is the typeset derivation document (source: `hw1_handwritten.tex`); if the
-instructor enforces the handwritten requirement, hand-copy it and replace the
-PDF with a scan of your notes — every step, table and boxed formula in the
-typeset version is what you should write out by hand.
 
 ## Measurement protocol details
 
